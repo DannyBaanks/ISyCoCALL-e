@@ -1,0 +1,1 @@
+"""Domain subpackage: contract, result, authority model."""
