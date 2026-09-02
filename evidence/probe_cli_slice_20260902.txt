@@ -1,0 +1,22 @@
+CLI vertical-slice evidence (2026-09-02)
+env: Python 3.12.4 venv .venv, isyco-calle 0.1.0 (editable), calle-ai 0.7.0
+
+$ .\.venv\Scripts\python.exe -m pytest -q
+> 26 passed, 2 skipped in 0.05s        (2 skipped = LIVE tests, no creds)
+
+$ .\.venv\Scripts\python.exe -m isyco_calle.cli doctor            (no CALLE_API_KEY)
+> config error: CALLE_API_KEY is not set; sdk ok; exit=1   [fail-closed]
+
+$ .\.venv\Scripts\python.exe -m isyco_calle.cli call --to +12025550123 --objective "..." --mock
+> status=rejected, exit=2  [authority denied: verified=false]  (capability != authority)
+
+$ .\.venv\Scripts\python.exe -m isyco_calle.cli call --to +12025550123 --objective "..." --mock --allow
+> status=success, request_id=mock_d29dc8f5, provider=mock, exit=0
+
+$ .\.venv\Scripts\python.exe -m isyco_calle.cli status mock_abc --mock
+> status=success, request_id=mock_abc, exit=0
+
+$ .\.venv\Scripts\isyco-call.exe doctor
+> (same as python -m), exit=1     [console script entrypoint works]
+
+MOCK paths only. REAL CALL = NOT_DEMONSTRATED (no CALLE_API_KEY on host).
