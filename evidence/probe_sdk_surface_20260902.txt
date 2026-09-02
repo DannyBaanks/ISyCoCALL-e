@@ -1,0 +1,41 @@
+calle-ai 0.7.0 real SDK surface probe (CalleClient(api_key='x'), no network)
+datetime: 2026-09-02
+env: Python 3.12.4, venv .venv
+command: py -m venv .venv; .venv\Scripts\python.exe -m pip install calle-ai; inspect signatures
+
+calle-ai 0.7.0
+deps: attrs, httpx
+Location: .venv\Lib\site-packages
+
+CalleClient.__init__: (self, *, api_key: str, base_url: str = 'https://api.heycall-e.com', timeout: float = 30.0, http_client: httpx.Client | None = None)
+
+calle.calls.CalleCalls methods:
+  create(*, task, recipient=None, recipients=None, result_schema=None,
+         recipient_result_schema=None, metadata=None, webhook_url=None,
+         idempotency_key=None) -> dict
+  create_and_wait(**kwargs) -> dict     # create() + wait_for_result()
+  get(call_id) -> dict
+  list_events(call_id, *, cursor=None, limit=None) -> dict
+  wait_for_result(call_id, *, interval_seconds=2.0, timeout_seconds=600.0) -> dict
+
+create_and_wait source (verbatim):
+  interval_seconds = kwargs.pop("interval_seconds", 2.0)
+  timeout_seconds = kwargs.pop("timeout_seconds", 600.0)
+  call = self.create(**kwargs)
+  return self.wait_for_result(str(call["id"]), ...)
+
+wait_for_result terminal statuses: {"completed","failed","canceled"}
+wait_for_result on timeout raises CalleTimeoutError
+
+errors (calle.errors):
+  CalleAPIError(code, status_code, message, details)
+  CalleAuthenticationError(CalleAPIError)
+  CalleConnectionError, CalleRateLimitError, CalleTimeoutError, CalleWebhookSignatureError
+
+Result fields documented (official README): status, task_completed,
+  completion_confidence{score,label}, evidence[], structured_result,
+  recipients[].structured_result, recipients[].attempts[].transcript_turns[]
+  [{offset_seconds, speaker, text}]
+
+NOTE: no live call placed in this probe. Live result-shape mapping is derived from
+the official README response example, marked accordingly in the surface doc.
