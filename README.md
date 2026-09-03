@@ -7,7 +7,7 @@
 <img src="docs/assets/hero.svg" alt="AUTH → CALL-E → PLAN → RUN → VERIFY" width="680" />
 
 ![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-28%20pass_real_calls-brightgreen)
+![Tests](https://img.shields.io/badge/tests-28%20pass-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 ![Platform](https://img.shields.io/badge/live%20verified-Windows-lightgrey)
 ![CALL-E](https://img.shields.io/badge/CALL--E-official%20SDK-blueviolet)
