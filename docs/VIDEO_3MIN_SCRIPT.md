@@ -1,5 +1,37 @@
 # Video Script — 3 Minutes, ISyCo CALL Bridge
 
+## Scaffolding status
+
+The `demo/isyco_calle.shitvid` file **can be rendered** and produces an MP4
+(needed files: `demo/input.mp4`, `demo/script_text.txt`, and this doc). The render
+above was verified 2026-09-03 (hash `2B436d2df76146c29e4154d715a6888c230eef3bfab33d852ac7ebaadc4f8981`).
+
+What it currently contains is a **placeholder**:
+
+- narration = mock (silence)
+- video = static solid-color background
+- no actual terminal running the demo (captura terminal sin capturar)
+
+A robust submission video needs to be either (a) recorded hero code run through
+`shitvid --route calle_bridge --capture`, or (b) crafted by capturing the demo
+terminal session and adding the script as overlay. This is out of scope of this
+work because the destination should be consistent.
+
+## Production plan (ready but not shot)
+
+0:00–0:25 problem (agent hits a task with no API)
+0:25–0:50 authority gate (4 checks, capability ≠ authority)
+0:50–1:20 deny (no grant -> entero command -> no call placed)
+1:20–2:00 real call (with grant -> CALL-E places the call)
+2:00–2:45 normalized result (status + outcome + conferences)
+2:45–3:00 close with the product story & links
+
+## Fallback video (if live isn't viable)
+
+If the final cultivated submission video is not recorded, we can fall back to
+a terminal-clip-based story (from our rescues) plus the stitched narration. That
+option should remain honest: the mock never takes the place of a real call.
+
 Title card: **ISyCo CALL Bridge — “When there is no API, the phone becomes one.
 Without giving the agent unlimited authority.”**
 
