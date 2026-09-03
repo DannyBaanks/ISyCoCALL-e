@@ -72,7 +72,42 @@ def test_status_via_capability():
     assert result.status is PhoneCallStatus.SUCCESS
 
 
-# -- transcript extraction (shared normalization, no network) --------------
+# -- carrier evidence extraction from REAL observed shape -------------
+
+def test_carrier_evidence_extracted_from_real_shape():
+    """Patch with the actual observed response structure from #105 evidence."""
+    from isyco_calle.providers.callee import CalleProvider
+    provider = CalleProvider.__new__(CalleProvider)
+    call = {
+        "status": "failed",
+        "id": "call_x",
+        "result": {
+            "extracted": {
+                "calling": {
+                    "calls": [
+                        {
+                            "status": "NO ANSWER",
+                            "hangup_type": "ByCallee",
+                            "duration_seconds": 0,
+                            "call_start_time": "2026-09-03 01:41:51",
+                            "call_end_time": "2026-09-03 01:41:51",
+                        }
+                    ]
+                }
+            }
+        },
+    }
+    carrier = provider._extract_carrier_evidence(call)
+    assert carrier["hangup_type"] == "ByCallee"
+    refs = provider._build_evidence_refs(call)
+    assert any("ByCallee" in r for r in refs)
+
+
+def test_no_carrier_evidence_when_absent():
+    from isyco_calle.providers.callee import CalleProvider
+    provider = CalleProvider.__new__(CalleProvider)
+    refs = provider._build_evidence_refs({"status": "completed", "task_completed": True, "evidence": ["a"]})
+    assert refs == ["a"]
 
 def test_transcript_extractor_flattens_turns():
     from isyco_calle.providers.callee import TranscriptExtractor

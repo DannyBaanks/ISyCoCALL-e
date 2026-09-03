@@ -133,6 +133,10 @@ class CalleProvider:
             # Unknown/incomplete terminal shape -> do not invent a conclusion.
             outcome = PhoneCallStatus.NOT_DEMONSTRATED
 
+        # Carrier-level detail discovered live on 2026-09-03 (issue #105):
+        # a run may end with status "NO ANSWER" while the handset never rang
+        # (hangup_type=ByCallee, duration_seconds=0). _build_evidence_refs
+        # surfaces it instead of inventing a nicer story.
         return PhoneCallResult(
             status=outcome,
             request_id=call.get("id"),
@@ -141,10 +145,36 @@ class CalleProvider:
             finished_at=call.get("finished_at"),
             transcript=TranscriptExtractor.extract(call),
             summary=call.get("summary"),
-            structured_output=call.get("structured_result"),
-            completion_confidence=call.get("completion_confidence"),
-            raw_evidence_reference=call.get("evidence"),
+            structured_output=call.get("structured_result") or call.get("result", {}).get("extracted"),
+            completion_confidence=call.get("completion_confidence")
+            or call.get("result", {}).get("outcome", {}).get("completion_confidence"),
+            raw_evidence_reference=self._build_evidence_refs(call),
         )
+
+    def _extract_carrier_evidence(self, call: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Pull carrier-side hangup detail when present (live runs expose this).
+
+        Observed in real CALL-E runs: run.result.extracted.calling.calls[].
+        """
+        result = call.get("result") or {}
+        extracted = result.get("extracted") or {}
+        calling = extracted.get("calling") or {}
+        calls = calling.get("calls") or []
+        if calls and isinstance(calls[0], dict):
+            return calls[0]
+        return None
+
+    def _build_evidence_refs(self, call: Dict[str, Any]) -> Optional[list]:
+        refs: list = []
+        evidence = call.get("evidence")
+        if evidence:
+            refs.extend(evidence if isinstance(evidence, list) else [str(evidence)])
+        carrier = self._extract_carrier_evidence(call)
+        if carrier is not None:
+            refs.append(
+                f"carrier: hangup={carrier.get('hangup_type')} duration={carrier.get('duration_seconds')}s"
+            )
+        return refs or None
 
     def _doctor(self) -> Dict[str, Any]:
         """Check config/SDK wiring without placing a call."""
