@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="160" viewBox="0 0 900 160">
+  <rect width="900" height="160" fill="#0d1117"/>
+  <g font-family="monospace" font-size="16" fill="#58a6ff">
+    <text x="30" y="65" fill="#7ee787">AUTH</text>
+    <text x="90" y="65">→</text>
+    <text x="130" y="65" fill="#ffa657">CALL-E</text>
+    <text x="215" y="65">→</text>
+    <text x="245" y="65" fill="#58a6ff">PLAN</text>
+    <text x="315" y="65">→</text>
+    <text x="345" y="65" fill="#58a6ff">RUN</text>
+    <text x="400" y="65">→</text>
+    <text x="430" y="65" fill="#d2a8ff">VERIFY</text>
+  </g>
+  <text x="30" y="105" font-family="monospace" font-size="12" fill="#8b949e">isyco_calle</text>
+</svg>
