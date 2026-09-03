@@ -1,7 +1,0 @@
-09:59:22 INFO    Video: input.mp4 1920x1080 20.00s
-09:59:22 INFO    Overlays: 0
-09:59:22 INFO    Narration: 1 pre-generated segments
-09:59:22 INFO    Timeline: 56.40s
-09:59:22 INFO    Captions: traditional
-09:59:22 INFO    Audio mixed
-09:59:23 INFO    Done! Output: build\isyco_calle_demo.mp4

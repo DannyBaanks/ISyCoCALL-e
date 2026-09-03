@@ -15,6 +15,9 @@ build/
 .coverage
 htmlcov/
 
+# shitvid scratch/build output
+demo/.shitvid-runs/
+
 # OS
 Thumbs.db
 .DS_Store
