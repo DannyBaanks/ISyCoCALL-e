@@ -1,0 +1,5 @@
+ISyCo CALL Bridge.
+One command. Two paths.
+ISHYCO DOMAIN: Contract -> Authority -> Provider -> Result.
+Reproducible evidence. No fabricated success.
+Built for the CALL-E hackathon.

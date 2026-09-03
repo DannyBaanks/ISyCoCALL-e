@@ -1,0 +1,46 @@
+{
+  "version": "shitvid-hackathon/1",
+  "narration": {
+    "provider": "mock",
+    "pre_generate": true
+  },
+  "automation": {
+    "browser": { "provider": "none" }
+  },
+  "capture": {
+    "provider": "none"
+  },
+  "render_profiles": {
+    "hackathon": {
+      "output_format": "mp4",
+      "max_duration": 90,
+      "captions": false,
+      "meme_overlays": false,
+      "random_cuts": false,
+      "fake_terminal": false,
+      "reaction_images": false,
+      "render": {
+        "source_video": "input.mp4",
+        "script": "script_text.txt",
+        "preset": "hackathon-clean",
+        "assets_dir": "../../../tools/shitvid/assets",
+        "presets_dir": "../../../tools/shitvid/presets",
+        "output": "isyco_calle_demo.mp4"
+      }
+    }
+  },
+  "routes": {
+    "calle_bridge": {
+      "render_profile": "hackathon",
+      "sequence": [
+        { "say": "ISyCo CALL Bridge: one command, two paths." },
+        { "capture_marker": "bridge_intro" },
+        { "say": "Path A: no authority grant, rejected, no call placed." },
+        { "capture_marker": "denied_path" },
+        { "say": "Path B: explicit grant, call authorized through CALL-E." },
+        { "capture_marker": "authorized_path" },
+        { "say": "Evidence preserved, hashed, reproducible." }
+      ]
+    }
+  }
+}
