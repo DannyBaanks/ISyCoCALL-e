@@ -1,114 +1,96 @@
 # ISyCo CALL Bridge
 
-Capability-gated phone calls for ISyCo via CALL-E.
+When there is no API, the phone becomes one — **without giving the agent unlimited
+authority.**
+
+## What
+
+A minimal, real fallback for agent workflows. When an interaction has no API and the
+agent can't proceed, this turns a structured request (`phone.call`) into a real
+outbound phone call through CALL-E — then normalizes the result so an agent can
+consume it.
 
 ```
 intent -> capability -> CALL-E -> phone interaction -> structured result -> caller
 ```
 
-## What
+Core principle: **capability != authority**. A call only happens when all four
+authority gates pass (`technically_possible`, `authorized`, `policy_allowed`,
+`verified`).
 
-A minimal, real vertical slice that lets an ISyCo agent turn a structured request
-(`phone.call`) into a real outbound phone call through CALL-E, and receive a normalized
-structured result back.
+## Golden demo (one command)
 
-## Why
+```powershell
+.\.venv\Scripts\python.exe -m isyco_calle.demo
+```
 
-A phone call is often the only way to reach a person or business (no booking API, a
-supplier who only takes calls, an appointment line without a webhook). CALL-E turns a goal
-into a real call and returns a schema-validated result an agent can actually act on.
+This shows both paths in ~5 seconds:
+
+- **PATH A (denied)**: the request enters, no caller grant exists, result is
+  `rejected` and **no call is placed** (provider untouched).
+- **PATH B (authorized)**: an explicit grant is issued at runtime (in this demo,
+  verified confirmation is satisfied), a real call is requested through the
+  CALL-E provider, and the normalized result is returned.
 
 ## Architecture
 
 ```
-structured request -> input contract -> phone.call capability (authority gate)
-    -> CALL-E adapter (calle-ai SDK) -> real CALL-E call
-    -> structured result (6-status outcome) -> caller
+structured request {action: phone.call, objective, target.phone}
+      |
+      v
+PhoneCallRequest contract (isyco_calle/domain/contract.py)
+      |
+      v
+phone.call capability gate (isyco_calle/capabilities/phone_call.py)
+      |  authority: technically_possible + authorized + policy_allowed + verified
+      v
+CALL-E provider adapter (isyco_calle/providers/callee.py)
+      |  wraps the official calle-ai SDK (real, not a stub)
+      v
+real CALL-E call (real outbound, real result)
+      v
+PhoneCallResult (isyco_calle/domain/result.py)
+  success | failed | rejected | timeout | provider_error | not_demonstrated
+      + request_id, provider, transcript, evidence, summary
 ```
 
-Core principle: **capability != authority**. A call only executes when four axes are granted:
-`technically_possible`, `authorized`, `policy_allowed`, `verified`
-(see `docs/AUTHORITY_MODEL.md`).
-
-```
-isyco_calle/
-  domain/contract.py     PhoneCallRequest + input contract
-  domain/result.py       PhoneCallResult + 6-status outcome model
-  domain/authority.py    4-axis authority evaluator + grants
-  capabilities/phone_call.py   the phone.call capability gate
-  providers/callee.py    real CALL-E adapter over calle-ai SDK
-  providers/mock.py      in-memory mock (tests only)
-  cli.py                 isyco-call doctor/call/status
-  config.py              secure env config (CALLE_API_KEY)
-```
-
-## Quickstart
+## Run it
 
 ```powershell
+# setup (silent)
 py -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -e .
-Copy-Item .env.example .env          # then set CALLE_API_KEY (or export it)
-.\.venv\Scripts\python.exe -m isyco_calle.cli doctor
-```
 
-## Configuration
-
-Secrets come only from environment variables (no hardcoded tokens):
-
-| Variable | Required | Purpose |
-|---|---|---|
-| `CALLE_API_KEY` | yes | CALL-E API key (dashboard.heycall-e.com/account/api-keys) |
-| `CALLE_BASE_URL` | no | default `https://api.heycall-e.com` |
-| `CALLE_TIMEOUT` | no | SDK timeout, default 120s |
-| `ISYCO_CALL_DEFAULT_CALLER` | no | default caller identity for CLI authority checks |
-
-Missing key → clear error and fail-closed (`doctor` exit 1).
-
-## Run
-
-```powershell
-# check config + SDK wiring (no call placed)
+# doctor (no call placed — gate check)
 .\.venv\Scripts\python.exe -m isyco_calle.cli doctor
 
-# place a call (authority-gated; --allow is the "verified" confirmation)
-.\.venv\Scripts\python.exe -m isyco_calle.cli call --to +12025550123 `
-    --objective "Confirm whether a business is open tomorrow" --allow
-
-# read a result by id
-.\.venv\Scripts\python.exe -m isyco_calle.cli status <call_id>
+# place a call (authority-gated; real network only with --real + CALLE_API_KEY)
+.\.venv\Scripts\python.exe -m isyco_calle.cli call --to +12025550123 \
+    --objective "Confirm whether a business can attend tomorrow" --allow
 ```
 
-Call without `--allow` returns `rejected` and places no call (capability != authority).
-`--mock` uses the in-memory mock provider for offline testing.
+Note: calls without `--allow` return `rejected` and place no call.
 
 ## Tests
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install pytest
 .\.venv\Scripts\python.exe -m pytest -q
 ```
 
-- Unit: contract, result, authority (offline).
-- Adapter: explicit mock provider (offline).
-- Live smoke: `tests/test_live_smoke.py`, marked `LIVE`, skipped unless `CALLE_API_KEY`
-  is set (and `CALL_E_LIVE=1` for the real-call test). A mock is never presented as live.
+- 28 unit tests pass (mock only, no live dependency).
+- `tests/test_live_smoke.py` is `LIVE`-marked and skips without `CALLE_API_KEY`.
+- A mock provider exists in `providers/mock.py` and *is never presented as a live
+  call#.
 
 ## Evidence
 
-`evidence/` holds probe outputs (SDK surface, CLI slice). Hashes/artifacts added as real
-calls are run. No secrets are stored.
+The `evidence/` directory holds probe outputs and per-call run JSON captures (SHA-256
+hashed). No secrets are stored. For full forensics on how the outcome semantics
+of real calls (why some outcome statuses are misleading), see `../CALL-E-AUTH-
+RESCUE-HACKATHON/` — separate repo with the full workout and hash chains (linux
++ windows runs, exact call IDs).
 
 ## Hackathon
 
-Built for the CALL-E hackathon (call-e.devpost.com). Details in `docs/HACKATHON.md`.
-
-## Status
-
-| Item | Status |
-|---|---|
-| Contract / capability / result / authority | implemented + tested |
-| CALL-E adapter (real SDK wiring) | implemented + tested (SDK installed) |
-| CLI (doctor/call/status) | implemented + tested |
-| Tests | 26 pass, 2 LIVE skipped |
-| **Real outbound call** | **NOT_DEMONSTRATED** (no `CALLE_API_KEY` on this host) |
-| Awesome-phone-call-agents PR | planned (not opened) — see `docs/AWESOME_PHONE_CALL_AGENTS.md` |
+Built for the **CALL-E: Your Code Is Calling** hackathon (call-e.devpost.com).
+Our issue and PR are tracked in `docs/SUBMISSION_CHECKLIST.md`.
