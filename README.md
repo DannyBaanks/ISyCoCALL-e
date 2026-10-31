@@ -7,7 +7,7 @@
 <img src="docs/assets/hero.svg" alt="AUTH → CALL-E → PLAN → RUN → VERIFY" width="680" />
 
 ![Python](https://img.shields.io/badge/python-3.12-blue?logo=python&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-28%20pass-brightgreen)
+![Tests](https://img.shields.io/badge/tests-57%20pass-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-lightgrey)
 ![Platform](https://img.shields.io/badge/live%20verified-Windows-lightgrey)
 ![CALL-E](https://img.shields.io/badge/CALL--E-official%20SDK-blueviolet)
@@ -21,7 +21,7 @@
 - An agent hits a task with no API — only a phone number. This bridges that gap.
 - Structured request in → authority check (4 explicit gates) → real CALL-E call → structured result out.
 - **Capability ≠ authority**: a caller does not get the power to call by existing. Denied means no call.
-- Fully tested offline (28 tests, mock-only), live-tested against the real CALL-E SDK.
+- Tested offline (57 tests, 2 live tests skipped without explicit credentials and consent gates).
 - Evidence-first: everything claimed is backed by a probe, a test, or a checksum.
 
 ## Quickstart
@@ -62,7 +62,9 @@ structured request  +--->  [contract validation]  +--->  [authority gate]
                                                        + request_id, transcript, evidence
 ```
 
-Only if all four gates pass does the real call happen. If not, the request is
+For real CLI operations, `authorized` comes from a signed, expiring grant receipt;
+`--allow` supplies only the separate execution-confirmation axis. Only if all four
+gates pass does the real call happen. If not, the request is
 rejected with a reason, before any phone number is dialed.
 
 ## Demo
@@ -82,7 +84,7 @@ The repo ships a golden two-path demo that shows exactly what we mean:
   PATH B — authorized
 ============================================================
 [authority] grant issued; verified = true
-[provider]  mock (or CALL-E when live)
+[provider]  mock only (the demo's real shortcut is disabled)
 [result]    status = success / structured outcome
             request_id = mock_...
 ```
@@ -104,7 +106,7 @@ Run it:
 | Provider: deterministic mock | `providers/mock.py` | ✅ | (never sold as live) |
 | CLI | `isyco_calle/cli.py` | ✅ (doctor/call/status) | ✅ |
 | Silent demo | `demo.py` | ✅ | closes both paths above |
-| Tests | `tests/` | ✅ 28 pass | ✅ (2 skipped live w/o creds) |
+| Tests | `tests/` | ✅ 57 pass | 2 skipped live without explicit gates |
 
 We're explicit: **a real outbound call was NOT placed through this repo** (no `CALLE_API_KEY`
 here). What exists was live-verified earlier today by real upstream flows in a separate
@@ -153,6 +155,8 @@ ISyCoCALL-e/
 ├── docs/                  # SUBMISSION_CHECKLIST, TESTING_INSTRUCTIONS, DEVPOST_FINAL, ...
 ├── evidence/              # real probe outputs (README + CLI slice), NOT secrets
 ├── SHA256SUMS.json        # checksum manifest
+├── GUIA.md                # operator commands and real outputs
+├── LICENSE                # MIT license text
 └── README.md              # you are here
 ```
 
@@ -173,6 +177,28 @@ challenge with the simplest possible implementation — but none of the safety s
 - [triage of the CALL-E onboarding seams encountered during this project](./docs/CALL_E_SURFACE.md)
 - [submission material we're going to publish](./docs/SUBMISSION_CHECKLIST.md)
 - [testing instructions](./docs/TESTING_INSTRUCTIONS.md)
+
+## 0.2 security migration
+
+- Real calls require an expiring Ed25519 grant receipt scoped to
+  `phone:<E.164>`, the package-pinned trust anchor, `--allow`, and
+  `--idempotency-key`.
+- Real status reads require a separate `phone.call.status` grant scoped to
+  `call:<id>`.
+- `not_demonstrated` exits 3; provider/timeout/failed outcomes exit 1; authority
+  rejection exits 2.
+- `demo --real` is disabled. Use the hardened `isyco-call call` path.
+
+## 2026-10-31 — newly versioned files
+
+Commit `87f6f63` brings into the repository the material that was previously untracked:
+
+- `.github/workflows/ci.yml` — CI workflow.
+- `GUIA.md` — operator guide (Spanish).
+- `isyco_calle/trust_anchor.py` — trust anchor used by the grant checks.
+- `tests/test_cli.py`, `tests/test_config.py` — CLI and configuration tests.
+- `LICENSE`.
+
 
 ## License
 
